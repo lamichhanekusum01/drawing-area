@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <!-- Include Spectre CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+  <!-- Include Font Awesome CSS -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+
+  <!-- Internal CSS -->
+  <style type="text/css">
+    /* Define colors for brush buttons */
+    #pink {
+      background-color:#F50057;
+      border-color:#F50057;
+    }
+    #blue {
+      background-color:#2979FF;
+      border-color:#2979FF;
+    }
+    #yellow {
+      background-color:#FFD600;
+      border-color:#FFD600;
+    }
+    #black {
+      background-color:#000000;
+      border-color:#000000;
+    }
+    /* Define white color for font-awesome icons */
+    i.white {
+      color:white;
+    }
+
+    /* Style for control panel */
+    div#controls {
+      width:960px;
+      margin:0 auto;
+      text-align:center;
+      margin-top:20px;
+    }
+
+    /* Style for drawing area */
+    div#drawingArea {
+      width:960px;
+      margin:0 auto;
+    }
+
+    /* Style for heading */
+    h1 {
+      font-size:34px;
+      text-align:center;
+      margin-top:60px;
+    }
+
+    /* Style for eraser warning */
+    #eraser-warning {
+      font-size: 16px;
+      color: red;
+      text-align: center;
+      margin-bottom: 10px;
+      display: none;
+    }
+  </style>
+
+</head>
+<body>
+
+  <!-- Heading -->
+  <h1> Let's Paint! </h1>
+
+  <!-- Drawing area -->
+  <div id="drawingArea">
+    <canvas id="main" width="960" height="500" style="border:1px solid #ccc;">
+      Here is my canvas.
+    </canvas>
+  </div>
+
+  <!-- Control panel -->
+  <div id="controls">
+    <!-- New button -->
+    <button id="new" class="btn btn-action">
+      <i class="far fa-file"></i> <!-- Font Awesome icon for new file -->
+    </button>
+
+    <!-- Eraser button -->
+    <button id="erase" class="btn btn-action">
+      <i class="fas fa-eraser"></i> <!-- Font Awesome icon for eraser -->
+    </button>
+
+    <!-- Brush color buttons -->
+    <button id="black" class="btn btn-action" >
+      <i class="fas fa-paint-brush white"></i> <!-- Font Awesome icon for brush -->
+    </button>
+    <button id="pink" class="btn btn-action" >
+      <i class="fas fa-paint-brush white"></i> <!-- Font Awesome icon for brush -->
+    </button>
+    <button id="blue" class="btn btn-action">
+      <i class="fas fa-paint-brush white"></i> <!-- Font Awesome icon for brush -->
+    </button>
+    <button id="yellow" class="btn btn-action">
+      <i class="fas fa-paint-brush white"></i> <!-- Font Awesome icon for brush -->
+    </button>
+
+    <br>
+
+    <!-- Brush size slider -->
+    Brush size:
+    <input id="slider" type="range" min="2" max="15" step="1" />
+    <span id="brushSize"></span>
+
+    <!-- Eraser warning -->
+    <div id="eraser-warning">Please disable the eraser to use the brushes.</div>
+  </div>
+
+  <!-- Log area -->
+  <div id="log"></div>
+
+  <!-- JavaScript -->
+  <script>
+    // Get canvas and context
+    const canvas = document.getElementById('main');
+    const context = canvas.getContext('2d');
+    const brushSizeSpan = document.getElementById('brushSize');
+    const slider = document.getElementById('slider');
+    const clearButton = document.getElementById('new');
+    const eraseButton = document.getElementById('erase');
+    const blackButton = document.getElementById('black');
+    const pinkButton = document.getElementById('pink');
+    const blueButton = document.getElementById('blue');
+    const yellowButton = document.getElementById('yellow');
+    const eraserWarning = document.getElementById('eraser-warning');
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let hue = 0;
+    let direction = true;
+    let brushColor = '#000000'; // Default to black color
+
+    // Function to draw on canvas
+    function draw(e) {
+      if (!isDrawing) return;
+
+      // Set stroke style based on eraser button state
+      context.strokeStyle = eraseButton.classList.contains('active') ? '#FFFFFF' : brushColor;
+      context.lineJoin = 'round';
+      context.lineCap = 'round';
+      context.lineWidth = slider.value;
+
+      context.beginPath();
+      context.moveTo(lastX, lastY);
+      context.lineTo(e.offsetX, e.offsetY);
+      context.stroke();
+
+      [lastX, lastY] = [e.offsetX, e.offsetY];
+    }
+
+    // Event listeners for mouse actions on canvas
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      [lastX, lastY] = [e.offsetX, e.offsetY];
+    });
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', () => isDrawing = false);
+    canvas.addEventListener('mouseout', () => isDrawing = false);
+
+    // Event listener for clear button
+    clearButton.addEventListener('click', () => {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // Event listener for eraser button
+    eraseButton.addEventListener('click', () => {
+      eraseButton.classList.toggle('active');
+      if (eraseButton.classList.contains('active')) {
+        eraserWarning.style.display = "block"; // Show eraser warning
+      } else {
+        eraserWarning.style.display = "none"; // Hide eraser warning
+      }
+    });
+
+    // Event listeners for brush color buttons
+    blackButton.addEventListener('click', () => {
+      brushColor = '#000000';
+      resetBrushButtons();
+      blackButton.classList.add('active');
+    });
+
+    pinkButton.addEventListener('click', () => {
+      brushColor = '#F50057';
+      resetBrushButtons();
+      pinkButton.classList.add('active');
+    });
+
+    blueButton.addEventListener('click', () => {
+      brushColor = '#2979FF';
+      resetBrushButtons();
+      blueButton.classList.add('active');
+    });
+
+    yellowButton.addEventListener('click', () => {
+      brushColor = '#FFD600';
+      resetBrushButtons();
+      yellowButton.classList.add('active');
+    });
+
+    // Event listener for brush size slider
+    slider.addEventListener('input', () => {
+      brushSizeSpan.textContent = slider.value;
+    });
+
+    // Function to reset brush buttons state
+    function resetBrushButtons() {
+      [blackButton, pinkButton, blueButton, yellowButton].forEach(btn => {
+        btn.classList.remove('active');
+      });
+    }
+  </script>
+
+</body>
+</html>
